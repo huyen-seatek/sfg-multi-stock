@@ -864,18 +864,46 @@ class WC_Form_Handler {
 	 * @param int $product_id Product ID to add to the cart.
 	 * @return bool success or not
 	 */
-	
-	private static function add_to_cart_handler_simple( $product_id ) {
-		$quantity          = empty( $_REQUEST['quantity'] ) ? 1 : wc_stock_amount( wp_unslash( $_REQUEST['quantity'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$passed_validation = apply_filters( 'woocommerce_add_to_cart_validation', true, $product_id, $quantity );
+	private static function add_to_cart_handler_simple($product_id)
+    {
+        $quantity = empty($_REQUEST['quantity']) ? 1 : wc_stock_amount(wp_unslash($_REQUEST['quantity'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $passed_validation = apply_filters('woocommerce_add_to_cart_validation', true, $product_id, $quantity);
 
-		if ( $passed_validation && false !== WC()->cart->add_to_cart( $product_id, $quantity ) ) {
-			wc_add_to_cart_message( array( $product_id => $quantity ), true );
-			return true;
-		}
-		return false;
-	}
-	
+        // =======================xu ly double adding item khi them vao gio hang=======================
+        if ($passed_validation) {
+            foreach (WC()->cart->get_cart() as $val) {
+                // if co trong gio hang roi thi khong can add to cart
+                if ($val['product_id'] == $product_id) {
+                    $passed_validation = false;
+                    break;
+                }
+            }
+        }
+        //===================================================================================================
+        $current_location = isset($_COOKIE['wcmlim_selected_location_termid']) ? intval($_COOKIE['wcmlim_selected_location_termid']) : null;
+        $stock_invalid = get_option('wcmlim_prod_instock_valid');
+
+        // If a current location is set, check stock
+            $stock_location_quantity = (int) get_post_meta($product_id, "wcmlim_stock_at_{$current_location}", true);
+            // Only display product if stock at current location > 0
+            if ($stock_location_quantity > $quantity) {
+                if ($passed_validation && false !== WC()->cart->add_to_cart($product_id, $quantity)) {
+                    wc_add_to_cart_message(array($product_id => $quantity), true);
+                    return true;
+                }
+            }else{
+				// wc_get_logger()->info(
+				// 	'wcmlim-stock-allowed',
+				// 	array(
+				// 		'source' => 'wcmlim-stock-allowed',
+				// 		'stock_invalid' => $stock_invalid,
+				// 	)
+				// );
+                // wc_add_notice(__($stock_invalid, "wcmlim"), "error");
+            }
+        return false;
+    }
+
 
 	/**
 	 * Handle adding grouped products to the cart.
