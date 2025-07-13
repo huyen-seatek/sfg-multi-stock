@@ -587,25 +587,28 @@ class Wcmlim_Public
 			$product->save();
 			update_post_meta($product_id, '_backorders', 'yes');
 			return $passed;
-		}
-		else
-		{
-			if (isset($cart_item['select_location']['location_termId']) && $quantity > $cart_item['select_location']['location_qty']) {
+		} else {
+
+			// get current product by product_id
+			$product = wc_get_product($product_id);
+			
 			// Calculate available quantity
-			$available_qty = $cart_item['select_location']['location_qty'];
-	
-			// Display error message
-			$error_message = sprintf(
-				__('Sorry, we do not have enough "%s" in stock to fulfill your order (%d available) for location %s. We apologize for any inconvenience caused.', 'wcmlim'),
-				$values['data']->get_name(), // Item name
-				$available_qty,
-				$cart_item['select_location']['location_name']
+			$available_qty = $product->get_available_qty();
+
+			if (isset($cart_item['select_location']['location_termId']) && $quantity > $available_qty) {
+
+				// Display error message
+				$error_message = sprintf(
+					__('Sorry, we do not have enough "%s" in stock to fulfill your order (%d available) for location %s. We apologize for any inconvenience caused.', 'wcmlim'),
+					$values['data']->get_name(), // Item name
+					$available_qty,
+					$cart_item['select_location']['location_name']
 				);
 				wc_clear_notices();
 				wc_add_notice($error_message, 'error');
 				$passed = false; // Set $passed to false to prevent updating the cart
 			}
-		
+
 			return $passed;
 		}
 	}

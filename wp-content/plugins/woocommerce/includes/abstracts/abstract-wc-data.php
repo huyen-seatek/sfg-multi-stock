@@ -183,8 +183,25 @@ abstract class WC_Data {
 	 * @since  2.6.0
 	 * @return int
 	 */
-	public function get_id() {
+	public function get_id()
+	{
 		return $this->id;
+	}
+
+	/**
+	 * get the available_qty by variation_id
+	 * @since  2.6.0
+	 * @return int
+	 * Returns the available quantity for the current location.
+	 * This is determined by the current location set in the cookie 'wcmlim_selected_location_termid'.
+	 */
+	public function get_available_qty()
+	{
+		$product_id = $this->get_id();
+		// get available quantity for the selected location by product_id using post meta
+		$current_location = isset($_COOKIE['wcmlim_selected_location_termid']) ? intval($_COOKIE['wcmlim_selected_location_termid']) : null;
+		$available_qty = (int) get_post_meta($product_id, "wcmlim_stock_at_{$current_location}", true) ?? 0;
+		return $available_qty;
 	}
 
 	/**
