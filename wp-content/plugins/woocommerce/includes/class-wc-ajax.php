@@ -488,7 +488,20 @@ class WC_AJAX
 		$variation_id      = 0;
 		$variation         = array();
 
-		
+		//--------------------------Check stock at location--------------------------
+		$cookie_termId = isset($_COOKIE['wcmlim_selected_location_termid']) ? $_COOKIE['wcmlim_selected_location_termid'] : "";
+		$terms = get_terms(array('taxonomy' => 'locations', 'hide_empty' => false, 'parent' => 0));
+		foreach ($terms as $t => $v) {
+			if ($cookie_termId == $v->term_id) {
+				$ln = $v->name;
+				$_location_qty = get_post_meta($product->get_id(), "wcmlim_stock_at_{$v->term_id}", true);
+			}
+		}
+
+		if (empty($_location_qty)) {
+			return;
+		}
+		//--------------------------End check stock at location--------------------------
 		if ($product && ProductType::VARIATION === $product->get_type()) {
 			$variation_id = $product_id;
 			$product_id   = $product->get_parent_id();

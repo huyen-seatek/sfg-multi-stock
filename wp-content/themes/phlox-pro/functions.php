@@ -90,3 +90,68 @@ add_shortcode('wcmlim_location', function () {
 });
 
 
+//-- Check stock availability via AJAX ---
+add_action('wp_ajax_wcmlim_check_stock', 'wcmlim_check_stock_ajax');
+add_action('wp_ajax_nopriv_wcmlim_check_stock', 'wcmlim_check_stock_ajax');
+
+function wcmlim_check_stock_ajax() {
+    $product_id  = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+    $location_id = isset($_POST['location_id']) ? absint($_POST['location_id']) : 0;
+
+    if (!$product_id || !$location_id) {
+        wp_send_json(array(
+            'error'   => true,
+            'message' => 'Dữ liệu không hợp lệ.',
+        ));
+    }
+
+    // Check tồn kho theo location:
+    $_location_qty = 0;
+    $location_name = '';
+
+    $terms = get_terms(array(
+        'taxonomy' => 'locations',
+        'hide_empty' => false,
+        'parent' => 0
+    ));
+
+    foreach ($terms as $term) {
+        if ($location_id === $term->term_id) {
+            $location_name = $term->name;
+            $_location_qty = (int) get_post_meta($product_id, "wcmlim_stock_at_{$term->term_id}", true);
+            break;
+        }
+    }
+
+    if ($_location_qty <= 0) {
+        wc_get_logger()->info(
+            'Đề xuất đổi cửa hàng:',
+            array(
+                'source'  => 'wcmlim-debug',
+                'context' => array(
+                    'product_id'         => $product_id,
+                    'location_name'      => $location_name,
+                    'location_qty_value' => $_location_qty
+                )
+            )
+        );
+
+        wp_send_json(array(
+            'error'   => true,
+            'message' => sprintf(__('Sản phẩm này không có sẵn tại cửa hàng <strong>%s</strong>. Vui lòng chọn cửa hàng khác hoặc liên hệ với chúng tôi để biết thêm thông tin.', 'woocommerce'), $location_name),
+        ));
+    }
+
+    // Còn hàng:
+    wp_send_json(array(
+        'error'   => false,
+        'message' => 'Còn hàng.',
+    ));
+}
+add_action('wp_enqueue_scripts', function() {
+    wp_enqueue_script('wcmlim-stock-check', get_template_directory_uri() . '/js/wcmlim-stock-check.js', array('jquery'), '1.0', true);
+    wp_localize_script('wcmlim-stock-check', 'wcmlim_ajax', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+    ));
+});
+//------------------------
