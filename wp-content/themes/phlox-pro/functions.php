@@ -76,3 +76,17 @@ function out_of_stock_at_the_end($posts_clauses)
     return $posts_clauses;
 }
 
+//Multi Stock
+add_shortcode('wcmlim_location', function () {
+    if (class_exists('Wcmlim_Public')) {
+        $plugin_public = new Wcmlim_Public('wcmlim', WCMLIM_VERSION);
+
+        ob_start();
+        $plugin_public->wcmlim_display_locationV2();
+        return ob_get_clean();
+    } else {
+        return 'Wcmlim plugin is not available.';
+    }
+});
+
+
