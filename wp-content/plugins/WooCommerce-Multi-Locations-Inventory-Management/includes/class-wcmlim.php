@@ -522,9 +522,11 @@ class Wcmlim
       }
      if ($hide_out_of_stock_location == 'on') {
       $this->loader->add_filter('woocommerce_get_availability_text', $plugin_public, 'wcmlim_stock_availability_for_each_location', 10, 2);
+      $this->loader->add_filter('woocommerce_get_availability_class', $plugin_public, 'wcmlim_class_stock_availability_for_each_location', 10, 2);
     }
     if ($specific_location == 'on') {
       $this->loader->add_filter('woocommerce_get_availability_text', $plugin_public, 'wcmlim_stock_availability_for_each_location', 10, 2);
+      $this->loader->add_filter('woocommerce_get_availability_class', $plugin_public, 'wcmlim_class_stock_availability_for_each_location', 10, 2);
     }
     $this->loader->add_filter('woocommerce_loop_add_to_cart_link', $plugin_public, 'wcmlim_replacing_add_to_cart_button', 10, 2);
       $this->loader->add_action('wp_ajax_wcmlim_ajax_add_to_cart', $plugin_public, 'wcmlim_ajax_add_to_cart');

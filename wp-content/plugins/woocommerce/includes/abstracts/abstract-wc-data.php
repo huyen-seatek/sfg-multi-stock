@@ -200,7 +200,7 @@ abstract class WC_Data {
 		$product_id = $this->get_id();
 		// get available quantity for the selected location by product_id using post meta
 		$current_location = isset($_COOKIE['wcmlim_selected_location_termid']) ? intval($_COOKIE['wcmlim_selected_location_termid']) : null;
-		$available_qty = (int) get_post_meta($product_id, "wcmlim_stock_at_{$current_location}", true) ?? 0;
+		$available_qty = get_post_meta($product_id, "wcmlim_stock_at_{$current_location}", true) ?? '';
 		return $available_qty;
 	}
 

@@ -1919,6 +1919,42 @@ class WC_Product extends WC_Abstract_Legacy_Product {
 	}
 
 	/**
+	 * Returns the product's stock managed by ID.
+	 *
+	 * This is used to determine which product ID manages the stock level.
+	 * For example, if a variation is managing the stock of its parent, this
+	 * should return the parent ID.
+	 *
+	 * @since  3.0.0
+	 * @return int
+	 */
+	public function get_total_available_qty_of_variable_product() {
+		$product_type = $this->get_type();
+		if ($product_type === 'variable') {
+			$children = $this->get_children();
+			$available_quantity = 0;
+			$isLocationContainProduct = true;
+			foreach ($children as $child_id) {
+				$child_product = wc_get_product($child_id);
+				if ($child_product) {
+
+					$child_avalable_quantity = $child_product->get_available_qty();
+					if (is_null($child_avalable_quantity) || ! is_numeric($child_avalable_quantity)) {
+						$isLocationContainProduct = false;
+						break;
+					}
+					$available_quantity += $child_product->get_available_qty();
+				}
+			}
+
+			if ($isLocationContainProduct) {
+				return $available_quantity;
+			} 
+			return '';
+		}
+	}
+
+	/**
 	 * If the stock level comes from another product ID, this should be modified.
 	 *
 	 * @since  3.0.0

@@ -1474,6 +1474,11 @@ class Wcmlim_Public
 		return include plugin_dir_path(__FILE__) . 'controller/location/wcmlim-stock-availability-for-each-location.php';
 	}
 
+		
+	public function wcmlim_class_stock_availability_for_each_location($stock_class, $product){
+		return include plugin_dir_path(__FILE__) . 'controller/location/wcmlim-stock-class-availability-for-each-location.php';
+	}
+
 	public function wcmlim_change_product_price($price_html, $product)
 	{
 		return include plugin_dir_path(__FILE__) . 'controller/shop/wcmlim-change-product-price.php';

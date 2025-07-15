@@ -1,9 +1,10 @@
 <?php
 
-$stock_text = '';
+$stock_class = '';
 $product_type = $product->get_type();
-$instocklabel = get_option("wcmlim_instock_button_text", 'In stock');
-$soldoutlabel = 'Tạm hết hàng';
+$instocklabel = 'in-stock';
+$soldoutlabel = 'out-of-stock';
+$changeStocklabel = 'in-stock';
 $setLocation = isset($_COOKIE['wcmlim_selected_location_termid']) ? $_COOKIE['wcmlim_selected_location_termid'] : null;
 $terms = get_terms(array('taxonomy' => 'locations', 'hide_empty' => false, 'parent' => 0));
 
@@ -40,11 +41,12 @@ if ($product_type === 'variable') {
 
     // Quyết định hiển thị
     if ($has_empty_in_selected && $total_qty_at_selected === 0) {
-        $stock_text = $total_qty_other_locations > 0 ? 'Đổi cửa hàng' : $soldoutlabel;
+        $stock_class = $total_qty_other_locations > 0 ? $changeStocklabel : $soldoutlabel;
     } elseif ($total_qty_at_selected === 0) {
-        $stock_text = $soldoutlabel;
+        $stock_class = $soldoutlabel;
     } else {
-        $stock_text = $total_qty_at_selected . ' ' . $instocklabel;
+        // $stock_class = $total_qty_at_selected . ' ' . $instocklabel;
+        $stock_class = 'display_none_in_stock';
     }
 
 } else {
@@ -64,12 +66,13 @@ if ($product_type === 'variable') {
     }
 
     if ($selected_qty === '') {
-        $stock_text = $other_qty_total > 0 ? 'Đổi cửa hàng' : $soldoutlabel;
+        $stock_class = $other_qty_total > 0 ? $changeStocklabel : $soldoutlabel;
     } elseif ((int)$selected_qty === 0) {
-        $stock_text = $soldoutlabel;
+        $stock_class = $soldoutlabel;
     } else {
-        $stock_text = intval($selected_qty) . ' ' . $instocklabel;
+        // $stock_class = intval($selected_qty) . ' ' . $instocklabel;
+        $stock_class = 'display_none_in_stock';
     }
 }
 
-return $stock_text;
+return $stock_class;
