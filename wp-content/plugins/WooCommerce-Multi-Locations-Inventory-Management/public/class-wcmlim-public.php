@@ -875,7 +875,7 @@ class Wcmlim_Public
 
 			$selLocQty = get_post_meta($product->get_id(), "wcmlim_stock_at_{$itemSelLocTermId}", true);
 
-			if ($item_stock_reduced || !$product || !$product->managing_stock()) {
+			if (!$item_stock_reduced || !$product || !$product->managing_stock()) {
 				continue;
 			}
 
