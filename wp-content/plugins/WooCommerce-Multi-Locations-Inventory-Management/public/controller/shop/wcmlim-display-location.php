@@ -179,6 +179,7 @@ if ($product instanceof WC_Product && $product->is_type('variable') && !$product
                          } ?>
                         </h4>
                     </div>
+                    <?php /*
                     <div class="Wcmlim_prefloc_box">
                         <?php if ($hideDropdown == "on") { ?>
                             <div class="loc_dd Wcmlim_prefloc_sel" style="display: none;">
@@ -218,6 +219,8 @@ if ($product instanceof WC_Product && $product->is_type('variable') && !$product
                                 <?php } ?>
                                 </div><!-- Div loc_dd -->
                             </div> <!-- Div Wcmlim_prefloc_box -->
+                            */ ?>
+
                             <?php
                             $geolocation = get_option('wcmlim_geo_location');
                             if ($geolocation == "on") : ?>
