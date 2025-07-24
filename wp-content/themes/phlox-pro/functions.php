@@ -94,8 +94,12 @@ add_shortcode('wcmlim_location', function () {
 add_action('wp_ajax_wcmlim_check_stock', 'wcmlim_check_stock_ajax');
 add_action('wp_ajax_nopriv_wcmlim_check_stock', 'wcmlim_check_stock_ajax');
 
-function wcmlim_check_stock_ajax() {
+function wcmlim_check_stock_ajax()
+{
+
     $product_id  = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+    $product     = wc_get_product($product_id);
+    $product_type = $product ? $product->get_type() : '';
     $location_id = isset($_POST['location_id']) ? absint($_POST['location_id']) : 0;
 
     if (!$product_id || !$location_id) {
@@ -123,23 +127,34 @@ function wcmlim_check_stock_ajax() {
         }
     }
 
-    if ($_location_qty <= 0) {
-        wc_get_logger()->info(
-            'Đề xuất đổi cửa hàng:',
-            array(
-                'source'  => 'wcmlim-debug',
-                'context' => array(
-                    'product_id'         => $product_id,
-                    'location_name'      => $location_name,
-                    'location_qty_value' => $_location_qty
-                )
-            )
-        );
+    if ($product_type === 'variable') {
+        $children = $product->get_children();
+        $has_empty_in_selected = false;
 
-        wp_send_json(array(
-            'error'   => true,
-            'message' => sprintf(__('Sản phẩm này không có sẵn tại cửa hàng <strong>%s</strong>. Vui lòng chọn cửa hàng khác hoặc liên hệ với chúng tôi để biết thêm thông tin.', 'woocommerce'), $location_name),
-        ));
+        // Tổng tồn kho tại location đang chọn
+        foreach ($children as $child_id) {
+            $child_product = wc_get_product($child_id);
+            if (! $child_product) continue;
+
+            $qty = $child_product->get_available_qty();
+
+            if ($qty === '' || $qty === null) {
+                $has_empty_in_selected = true;
+            }
+        }
+        if ($has_empty_in_selected) {
+            wp_send_json(array(
+                'error'   => true,
+                'message' => sprintf(__('Sản phẩm này không có sẵn tại cửa hàng <strong>%s</strong>. Vui lòng chọn cửa hàng khác hoặc liên hệ với chúng tôi để biết thêm thông tin.', 'woocommerce'), $location_name),
+            ));
+        }
+    } else {
+        if ($_location_qty <= 0) {
+            wp_send_json(array(
+                'error'   => true,
+                'message' => sprintf(__('Sản phẩm này không có sẵn tại cửa hàng <strong>%s</strong>. Vui lòng chọn cửa hàng khác hoặc liên hệ với chúng tôi để biết thêm thông tin.', 'woocommerce'), $location_name),
+            ));
+        }
     }
 
     // Còn hàng:
@@ -148,10 +163,26 @@ function wcmlim_check_stock_ajax() {
         'message' => 'Còn hàng.',
     ));
 }
-add_action('wp_enqueue_scripts', function() {
+add_action('wp_enqueue_scripts', function () {
     wp_enqueue_script('wcmlim-stock-check', get_template_directory_uri() . '/js/wcmlim-stock-check.js', array('jquery'), '1.0', true);
     wp_localize_script('wcmlim-stock-check', 'wcmlim_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
     ));
 });
 //------------------------
+add_filter('woocommerce_payment_complete_reduce_order_stock', function ($reduce, $order_id) {
+    $order = wc_get_order($order_id);
+
+    if (! $order instanceof WC_Order) {
+        return $reduce; // Fallback if invalid order
+    }
+
+    $status = $order->get_status();
+
+    // Allow stock reduction only when status is 'processing' or 'completed' or 'on-hold'
+    if (in_array($status, ['on-hold', 'processing', 'completed'], true)) {
+        return true;
+    }
+
+    return false; // Otherwise, do not reduce stock
+}, 99, 2);
